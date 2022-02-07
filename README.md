@@ -1,5 +1,6 @@
 # Real-time detekce dopravy pomocí OpenCV
-Repozitář s bakalářskou prací, včetně programu z praktické části.
+Repozitář s praktickou částí mé bakalářské práce.
+
 ## Zásady pro vypracování:
 1. Proveďte průzkum moderních metod pro zpracování obrazu.
 2. Popište metody pro detekci objektů.
@@ -13,3 +14,19 @@ Repozitář s bakalářskou prací, včetně programu z praktické části.
 3. VILLAN, Alberto Fernandez. Mastering OpenCV 4 with Python. Packt Publishing, 2019, 517 s. ISBN 9781789344912.
 4. SOLEM, Jan Erik. Programming Computer Vision with Python. O’Reilly Media, 2012, 261 s. ISBN 9781449316549.
 5. DEY, Sandipan. _Hands-on image processing with Python: expert techniques for advanced image analysis and effective interpretation of image data_. Birmingham: Packt Publishing, Limited, 2018, 643 s. ISBN 978-178-9343-731.
+
+## TODO
+- ~~Vytvořit Flask serveru~~
+- ~~Získávat livestream snímků pro další zpracování~~
+- ~~Implementovat YOLO detector~~
+- Implementovat Deep Sort tracker
+- Vizualizace dat
+- Streamovat zpracované snímky pomocí FFMPEG
+- UI / Zpracovávání více kamer
+- Argparse
+
+## Použité knihovny
+- [Flask](https://flask.palletsprojects.com/en/2.0.x/)
+- [CamGear](https://github.com/abhiTronix/vidgear)
+- [GStreamer](https://gstreamer.freedesktop.org/)
+- [OpenCV s podporou CUDA a GStreamer](https://github.com/opencv/opencv)
