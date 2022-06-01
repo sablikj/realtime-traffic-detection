@@ -1,0 +1,16 @@
+dash
+dash_daq
+flask
+dash_extensions
+plotly
+numpy
+pandas
+matplotlib
+scipy
+youtube-dl==2020.12.2
+vidgear[core]
+tensorflow-gpu
+pyodbc
+python-dotenv
+dash_bootstrap_components
+requests
