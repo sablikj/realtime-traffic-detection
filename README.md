@@ -15,18 +15,11 @@ Repozitář s praktickou částí mé bakalářské práce.
 4. SOLEM, Jan Erik. Programming Computer Vision with Python. O’Reilly Media, 2012, 261 s. ISBN 9781449316549.
 5. DEY, Sandipan. _Hands-on image processing with Python: expert techniques for advanced image analysis and effective interpretation of image data_. Birmingham: Packt Publishing, Limited, 2018, 643 s. ISBN 978-178-9343-731.
 
-## TODO
-- ~~Vytvořit Flask serveru~~
-- ~~Získávat livestream snímků pro další zpracování~~
-- ~~Implementovat YOLO detector~~
-- Implementovat Deep Sort tracker
-- Vizualizace dat
-- Streamovat zpracované snímky pomocí FFMPEG
-- UI / Zpracovávání více kamer
-- Argparse
 
-## Použité knihovny
-- [Flask](https://flask.palletsprojects.com/en/2.0.x/)
+## Hlavní použité knihovny
+- [Dash](https://plotly.com/dash/)
 - [CamGear](https://github.com/abhiTronix/vidgear)
 - [GStreamer](https://gstreamer.freedesktop.org/)
 - [OpenCV s podporou CUDA a GStreamer](https://github.com/opencv/opencv)
+- [Deep SORT](https://github.com/nwojke/deep_sort)
+- [YOLOv4](https://github.com/AlexeyAB/darknet)
