@@ -3,6 +3,14 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+*.sql
+.idea
+DB cmds.txt
+
+# Weights
+*.weights
+*.pb
+
 # C extensions
 *.so
 

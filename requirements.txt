@@ -9,7 +9,7 @@ matplotlib
 scipy
 youtube-dl==2020.12.2
 vidgear[core]
-tensorflow-gpu
+#tensorflow-gpu
 pyodbc
 python-dotenv
 dash_bootstrap_components

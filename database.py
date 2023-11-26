@@ -15,15 +15,18 @@ if platform.system() == 'Windows':
     driver = os.getenv('DB_DRIVER_WIN')
 else:
     driver = os.getenv('DB_DRIVER_LINUX')
+# Connection to remote server
+#conn = pyodbc.connect(
+#    f"Driver={driver};"
+#    f"Server={os.getenv('DB_SERVER')};"
+#    f"Database={os.getenv('DB_DATABASE')};"
+#    f"UID={os.getenv('DB_USERNAME')};"
+#    f"PWD={os.getenv('DB_PASSWORD')};"
+#    "TrustServerCertificate=YES"
+#)
 
-conn = pyodbc.connect(
-    f"Driver={driver};"
-    f"Server={os.getenv('DB_SERVER')};"
-    f"Database={os.getenv('DB_DATABASE')};"
-    f"UID={os.getenv('DB_USERNAME')};"
-    f"PWD={os.getenv('DB_PASSWORD')};"
-    "TrustServerCertificate=YES"
-)
+# Connection to local server
+conn = pyodbc.connect(f"Driver={os.getenv('DB_DRIVER_WIN')};Server={os.getenv('DB_SERVER')};Database={os.getenv('DB_DATABASE')};Trusted_Connection=yes;")
 
 """
 Returns vehicle data from the current day

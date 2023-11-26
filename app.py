@@ -107,19 +107,6 @@ app = dash.Dash(__name__, server=server, external_stylesheets=[dbc.themes.BOOTST
                 {"name": "viewport", "content": "width=device-width"}], assets_folder='application/assets',suppress_callback_exceptions=True)
 
 
-@server.before_first_request
-def init():
-    global data, points, dotenv_file
-    dotenv_file = dotenv.find_dotenv()
-    dotenv.load_dotenv(dotenv_file)
-    if USE_DB:
-        data = fetchToday()
-    else:
-        data = pd.DataFrame(columns=['VehicleID', 'Class', 'IntersectionOrigin', 'IntersectionExit', 'Timestamp'])    
-
-    points = pd.DataFrame(columns=['X_point', 'Y_point', 'VehicleID'])
-
-
 @server.route('/video_stream')
 def video_stream():
     return Response(run(VideoStream()), mimetype='multipart/x-mixed-replace; boundary=frame')
@@ -292,6 +279,8 @@ def update_object_count_pie(n_intervals):
 )
 def update_bar_chart(children):
     global data
+    if 'Timestamp' not in data.columns:
+        return px.bar(pd.DataFrame.empty, x="Timestamp", y="count", color="Class", title="Traffic density", template="plotly_dark")
     hourData = data
     hourData['Timestamp'] = pd.to_datetime(hourData['Timestamp'])
     test = hourData.groupby(pd.Grouper(key='Timestamp', freq='H'))['Class'].value_counts().reset_index(name='count')
@@ -562,13 +551,15 @@ def updateFPSCounter(n_intervals,old_logs):
 )
 def updateTrafficFlow(n_intervals,old_logs):    
     global data
+    if 'Timestamp' not in data.columns:
+        return 0
     data['Timestamp'] = pd.to_datetime(data['Timestamp'])
 
     # Number of vehicles from last hour
     flow = data.groupby(pd.Grouper(key='Timestamp', freq='H'))['VehicleID'].count().iloc[-1]
 
     # Return vehicles per minute
-    return  round(float(flow / 60),1) 
+    return  round(float(flow / 60),1)
 
 
 # Defined detection areas
@@ -589,7 +580,8 @@ def definedAreas(n_clicks, value, children):
 )
 def updateEntrance(n_intervals,children):    
     global data
-
+    if 'Timestamp' not in data.columns:
+        return "Unknown"
     # First group rows by hour, then calculate most used intersection entrance
     interEntrance = data.groupby(pd.Grouper(key='Timestamp', freq='H'))['IntersectionOrigin'].value_counts().tail(getRoutesLen()).idxmax()[1]
 
@@ -603,12 +595,27 @@ def updateEntrance(n_intervals,children):
 )
 def updateExit(n_intervals,children):    
     global data
-
+    if 'Timestamp' not in data.columns:
+        return "Unknown"
      # First group rows by hour, then calculate most used intersection exit
     interExit = data.groupby(pd.Grouper(key='Timestamp', freq='H'))['IntersectionExit'].value_counts().tail(getRoutesLen()).idxmax()[1]
 
     return  interExit
 
-if __name__ == '__main__':  
+
+if __name__ == '__main__':
+    global data, points, dotenv_file
+    dotenv_file = dotenv.find_dotenv()
+    dotenv.load_dotenv(dotenv_file)
+
+    data = pd.DataFrame(columns=['VehicleID', 'Class', 'IntersectionOrigin', 'IntersectionExit', 'Timestamp'])
+
+    if USE_DB:
+        data = fetchToday()
+    else:
+        data = pd.DataFrame(columns=['VehicleID', 'Class', 'IntersectionOrigin', 'IntersectionExit', 'Timestamp'])
+
+    points = pd.DataFrame(columns=['X_point', 'Y_point', 'VehicleID'])
+
     # Possible to add host and port for specific adress -> app.run_server(debug=False,host=127.0.0.1, port=9000)
     app.run_server(debug=False)
