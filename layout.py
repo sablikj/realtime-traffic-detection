@@ -427,71 +427,57 @@ def layout():
                     # Column for app graphs and plots
                     html.Div(
                         className="nine columns div-for-charts bg-grey",
-                        children=[                            
+                        children=[
                             # First Row
                             html.Div(
                                 className='row bg-grey',
-                                children=[                                
+                                children=[
                                     html.Div(
                                         children=[
                                             # Video
                                             html.Div(
                                                 className='row',
-                                                children=[       
+                                                children=[
                                                     html.H4(f'{getTitle()}'),
                                                     html.Img(src="/video_stream", style={'height':'30em'}),
                                                 ],
                                                 style={'display': 'inline-block',
                                                     'width': '60%', 'marginRight':'5px', 'height':'50%', 'verticalAlign': 'top'}
-                                            ),                                            
+                                            ),
                                             # Info
                                             html.Div(
                                                 className='row',
-                                                children=[    
+                                                children=[
                                                      # FPS
                                                     html.Div(children=[
                                                         html.H5('FPS: ', style={'display': 'inline-block', 'width':'50%'}),
                                                         html.H5(id='fpsCounter', style={'display': 'inline-block','width':'50%', 'textAlign':'right'})
-                                                    ], 
+                                                    ],
                                                     style={'height':'25%', 'width':'95%','verticalAlign':'middle', 'horizontalAlign':'left', 'marginLeft':'10px', 'backgroundColor': '#1E1E1E'}),
 
-                                                    # Detection areas                                                                                                   
+                                                    # Detection areas
                                                     html.Div(children=[
                                                         html.H5('Detection areas: ', style={'display': 'inline-block', 'width':'50%'}),
                                                         html.H5(id='definedAreas', style={'display': 'inline-block','width':'50%', 'textAlign':'right'})
-                                                    ], 
-                                                    style={'height':'25%', 'width':'95%','verticalAlign':'middle', 'horizontalAlign':'left', 'marginLeft':'10px', 'marginTop': '20px', 'backgroundColor': '#1E1E1E'}),           
+                                                    ],
+                                                    style={'height':'25%', 'width':'95%','verticalAlign':'middle', 'horizontalAlign':'left', 'marginLeft':'10px', 'marginTop': '20px', 'backgroundColor': '#1E1E1E'}),
 
-                                                
-                                                    # Traffic flow                                                
+
+                                                    # Traffic flow
                                                     html.Div(children=[
                                                         html.H5('Traffic Flow [v/min]: ', style={'display': 'inline-block', 'width':'75%'}),
                                                         html.H5(id='trafficFlow', style={'display': 'inline-block','width':'25%', 'textAlign':'right'})
-                                                    ], 
-                                                    style={'height':'25%', 'width':'95%','verticalAlign':'bottom', 'horizontalAlign':'left', 'marginLeft':'10px', 'marginTop': '165px', 'backgroundColor': '#1E1E1E'}), 
+                                                    ],
+                                                    style={'height':'25%', 'width':'95%','verticalAlign':'bottom', 'horizontalAlign':'left', 'marginLeft':'10px', 'marginTop': '165px', 'backgroundColor': '#1E1E1E'}),
 
-                                                    
-                                                    # Most used entrance                                                                                                  
-                                                    html.Div(children=[
-                                                        html.H5('Busiest Entrance: ', style={'display': 'inline-block', 'width':'50%'}),
-                                                        html.H5(id='busiestEntrance', style={'display': 'inline-block','width':'50%', 'textAlign':'right'})
-                                                    ], 
-                                                    style={'height':'25%', 'width':'95%','verticalAlign':'bottom', 'horizontalAlign':'left', 'marginLeft':'10px', 'marginTop': '20px', 'backgroundColor': '#1E1E1E'}),                                    
-
-                                                    # Most used exit                                                                                                  
-                                                    html.Div(children=[
-                                                        html.H5('Busiest Exit: ', style={'display': 'inline-block', 'width':'50%'}),
-                                                        html.H5(id='busiestExit', style={'display': 'inline-block','width':'50%', 'textAlign':'right'})
-                                                    ], 
-                                                    style={'height':'25%', 'width':'95%','verticalAlign':'bottom', 'horizontalAlign':'left', 'marginLeft':'10px', 'marginTop': '20px', 'backgroundColor': '#1E1E1E'}),                                                                                                                                              
                                                 ],
                                                 style={'display': 'inline-block',
                                                     'width': '40%', 'marginLeft':'5px','height':'15em', 'font-size': '1.2rem', 'marginTop':'40px'}
-                                            ),                           
-                                        ],                                        
-                                    ),                                        
-                                ],    
-                                style={'margin': '20px'}                                                           
+                                            ),
+                                        ],
+                                    ),
+                                ],
+                                style={'margin': '20px'}
                             ),
 
                            # Second row
@@ -504,28 +490,34 @@ def layout():
                                     dcc.Interval(id='interval-updating-tenMin', interval=600000, n_intervals=0),
                                     html.Div(
                                         children=[
-                                            # Pie chart
                                             html.Div(
-                                                className='row bg-grey',
+                                                className='row',
                                                 children=[
-                                                    html.Div(id='pieChart', style={'height':'75%'}),
-                                                ],
-                                                style={'display': 'inline-block',
-                                                    'width': '40%', 'marginRight':'5px', 'height':'50%'}
-                                            ),
-                                            # Bar chart
-                                            html.Div(
-                                                className='row bg-grey',
-                                                children=[
-                                                    dcc.Graph(id='barChart'),
-                                                ],
-                                                style={'display': 'inline-block',
-                                                    'width': '60%', 'marginLeft':'5px','height':'50%'}
-                                            ),                           
-                                        ],                                        
-                                    ),  
-                                ],    
-                                style={'margin': '20px'}                                                           
+                                                dcc.Upload(
+                                                    id='upload-image',
+                                                    children=html.Div([
+                                                        'Drag and Drop or ',
+                                                        html.A('Select Files')
+                                                    ]),
+                                                    style={
+                                                        'width': '100%',
+                                                        'height': '60px',
+                                                        'lineHeight': '60px',
+                                                        'borderWidth': '1px',
+                                                        'borderStyle': 'dashed',
+                                                        'borderRadius': '5px',
+                                                        'textAlign': 'center',
+                                                        'margin': '10px'
+                                                    },
+                                                    # Allow multiple files to be uploaded
+                                                    multiple=True
+                                                ),
+                                                html.Div(id='output-image-upload'),
+                                            ])
+                                        ],
+                                    ),
+                                ],
+                                style={'margin': '20px'}
                             )
                         ]
                     ),

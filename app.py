@@ -1,19 +1,12 @@
 import dash
 import cv2
-import time
-import os
 import dotenv
 import json
 import numpy as np
-import pandas as pd
 from flask import Flask, Response
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output, State
-import plotly.express as px
-from vidgear.gears import CamGear
-from datetime import datetime
 from dash import html, dcc
-import plotly.graph_objs as go
 
 from layout import layout
 from database import *
@@ -40,22 +33,18 @@ Class working with video stream.
 """
 class VideoStream():
     def __init__(self):
-        url = os.getenv('CAM_URL')
-        if "http" in url:
-            self.stream = CamGear(source=url,
-                                  stream_mode=True, logging=True, **options).start()
-        else:
-            self.stream = CamGear(source=url,
-                                  stream_mode=False, logging=True).start()
+        self.stream = cv2.VideoCapture(os.getenv('CAM_URL'))
 
     def __del__(self):
         self.stream.stop()
 
     def getFrame(self):
-        img = self.stream.read()
-        img = cv2.resize(img, (WIDTH, HEIGHT), interpolation=cv2.INTER_AREA)       
-
-        return img
+        ret, img = self.stream.read()
+        if ret:
+            img = cv2.resize(img, (WIDTH, HEIGHT), interpolation=cv2.INTER_AREA)
+            return img
+        else:
+            return None
 
 """
 Main loop for the frame processing.
@@ -114,7 +103,8 @@ app = dash.Dash("Real-time Traffic Detection", server=server, external_styleshee
 
 @server.route('/video_stream')
 def video_stream():
-    return Response(run(VideoStream()), mimetype='multipart/x-mixed-replace; boundary=frame')
+    if os.getenv('CAM_URL') != "":
+        return Response(run(VideoStream()), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 app.layout = layout()
 
@@ -191,126 +181,6 @@ def func(n_clicks,start_date, end_date, value):
             return dcc.send_data_frame(downData.to_csv, "vehicleData-{0}_{1}.csv".format(start_date, end_date))
         if value == 'Points':
             return dcc.send_data_frame(downData.to_csv, "vehiclePoints-{0}_{1}.csv".format(start_date, end_date))
-
-
-###########
-# Charts
-###########
-
-# PIE CHART
-@app.callback(
-    Output('pieChart', 'children'),
-    Input('emptyDiv6', 'children')
-)
-def update_pieChart(children):
-    return [        
-          html.Div(
-                children=[                    
-                    dcc.Graph(
-                        id="pie-object-count",
-                        figure=dict(
-                            layout={
-                                "paper_bgcolor": "#1E1E1E",
-                                "plot_bgcolor": "#1E1E1E",
-                            }
-                        ),
-                    ),
-                ]
-            )]
-        
-
-@app.callback(
-    Output("pie-object-count", "figure"),
-    [Input("interval-updating-fiveSec", "n_intervals")],
-)
-def update_object_count_pie(n_intervals):
-    global data
-    layout = go.Layout(
-        showlegend=True,
-        title='Vehicle diversity',
-        paper_bgcolor="#1E1E1E",
-        plot_bgcolor="rgb(255,255,255)",
-        autosize=False,
-        font=dict(
-            color="White"
-        )
-    )
-    
-    if len(data) != 0:
-        #Get dataframe from list
-        headers = ['ID','Timestamp', 'Class', 'Origin', 'Exit']
-        df_data = pd.DataFrame(data, columns=headers)
-        
-        # Get the count of each object class
-        class_counts = df_data["Class"].value_counts()
-
-        classes = class_counts.index.tolist()  # List of each class
-        counts = class_counts.tolist()  # List of each count
-    else:
-        classes = ['No Data']
-        counts = [1]
-    text = [f"{count} detected" for count in counts]
-
-    # Set colorscale to piechart
-    colorscale = [
-        "#fa4f56",
-        "#fe6767",
-        "#ff7c79",
-        "#ff908b",
-        "#ffa39d",
-        "#ffb6b0",
-        "#ffc8c3",
-        "#ffdbd7",
-        "#ffedeb",
-        "#ffffff",
-    ]
-
-    pie = go.Pie(
-        labels=classes,
-        values=counts,
-        text=text,
-        hoverinfo="text+percent",
-        textinfo="label+percent",
-        marker={"colors": colorscale[: len(classes)]},
-    )
-    
-    return go.Figure(data=[pie], layout=layout)
-    
-
-# Bar chart
-@app.callback(
-    Output('barChart', 'figure'),
-    Input('emptyDiv12', 'children')
-)
-def update_bar_chart(children):
-    global data
-    values = pd.DataFrame(data)
-
-    values['Timestamp'] = pd.to_datetime(values['Timestamp'])
-    values = values.groupby(pd.Grouper(key='Timestamp', freq='H'))['Class'].value_counts().reset_index(name='count')
-
-    # Buttons
-    fig = px.bar(values, x="Timestamp", y="count", color="Class", title="Traffic density", template="plotly_dark")
-    fig.update_xaxes(
-        rangeselector=dict(
-            buttons=list([
-                dict(count=1, label="1h", step="hour", stepmode="backward"),
-                dict(count=24, label="24h", step="hour", stepmode="backward"),
-                dict(count=7, label="1w", step="day", stepmode="backward"),
-                dict(step="all")
-            ])
-        )
-    )
-    fig.update_xaxes(rangeselector_bgcolor="#31302F")
-
-    fig.update_layout(
-        paper_bgcolor="#1E1E1E",
-        autosize=False,        
-        font=dict(
-            color="White"
-        )
-    )
-    return fig
 
 ########
 # Modals
@@ -547,78 +417,18 @@ def updateFPSCounter(n_intervals,old_logs):
     return round(FPS)
  
 
-# Traffic Flow
-@app.callback(
-  Output('trafficFlow','children'),
-  [Input('interval-updating-fiveSec','n_intervals')],
-  [State('trafficFlow','children')]
-)
-def updateTrafficFlow(n_intervals,old_logs):    
-    global data
-    values = pd.DataFrame(data)
-    values['Timestamp'] = pd.to_datetime(values['Timestamp'])
-
-    # Number of vehicles from last hour
-    flow = values.groupby(pd.Grouper(key='Timestamp', freq='H'))['VehicleID'].count().iloc[-1]
-
-    # Return vehicles per minute
-    return  round(float(flow / 60),1)
-
-
-# Defined detection areas
-@app.callback(
-  Output('definedAreas','children'),
-  [Input('areaInput', 'value')],
-  [Input('PolygonModalClear', 'n_clicks')],
-  [State('definedAreas','children')]
-)
-def definedAreas(n_clicks, value, children):
-    return getRoutesLen()
-
-# Busiest entrance
-@app.callback(
-  Output('busiestEntrance','children'),
-  [Input('interval-updating-fiveSec','n_intervals')],
-  [State('definedAreas','children')]
-)
-def updateEntrance(n_intervals,children):    
-    global data
-    values = pd.DataFrame(data)
-    # First group rows by hour, then calculate most used intersection entrance
-    values['Timestamp'] = pd.to_datetime(values['Timestamp'])
-    interEntrance = values.groupby(pd.Grouper(key='Timestamp', freq='H'))['IntersectionOrigin'].value_counts().tail(getRoutesLen()).idxmax()[1]
-
-    return interEntrance
-
-# Busiest Exit
-@app.callback(
-  Output('busiestExit','children'),
-  [Input('interval-updating-fiveSec','n_intervals')],
-  [State('busiestExit','children')]
-)
-def updateExit(n_intervals,children):    
-    global data
-    values = pd.DataFrame(data)
-     # First group rows by hour, then calculate most used intersection exit
-    values['Timestamp'] = pd.to_datetime(values['Timestamp'])
-    interExit = values.groupby(pd.Grouper(key='Timestamp', freq='H'))['IntersectionExit'].value_counts().tail(getRoutesLen()).idxmax()[1]
-
-    return  interExit
-
-
 if __name__ == '__main__':
     global data, points, dotenv_file
     dotenv_file = dotenv.find_dotenv()
     dotenv.load_dotenv(dotenv_file)
 
-    data = [] #pd.DataFrame(columns=['VehicleID', 'Class', 'IntersectionOrigin', 'IntersectionExit', 'Timestamp'])
+    data = []
 
     if USE_DB:
-        data = fetchToday()
+        data = []
     else:
-        data = [] #pd.DataFrame(columns=['VehicleID', 'Class', 'IntersectionOrigin', 'IntersectionExit', 'Timestamp'])
-
-    points = [] #pd.DataFrame(columns=['X_point', 'Y_point', 'VehicleID'])
+        data = []
+    points = []
 
     # Possible to add host and port for specific adress -> app.run_server(debug=False,host=127.0.0.1, port=9000)
     app.run_server(debug=False)
