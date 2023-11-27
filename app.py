@@ -40,8 +40,13 @@ Class working with video stream.
 """
 class VideoStream():
     def __init__(self):
-        self.stream = CamGear(source=os.getenv('CAM_URL'),
-                              stream_mode=True, logging=True, **options).start()
+        url = os.getenv('CAM_URL')
+        if "http" in url:
+            self.stream = CamGear(source=url,
+                                  stream_mode=True, logging=True, **options).start()
+        else:
+            self.stream = CamGear(source=url,
+                                  stream_mode=False, logging=True).start()
 
     def __del__(self):
         self.stream.stop()
@@ -70,12 +75,12 @@ def run(stream):
         if frameCount % 3 != 0:
             prevTime = time.time()
             continue
-        
+
         # Detect vehicles in a frame
         classes, confidences, boxes = detectVehicles(frame, ALLOWED_CLASSES)
 
         # Track detected vehicles
-        frame, data, points = trackVehicles(frame, data, points, classes, confidences, boxes)      
+        frame, data, points = trackVehicles(frame, data, points, classes, confidences, boxes)
          
         # Save data every 5 min (4500 frames at 15 FPS)
         if len(data) > 10 and frameCount % 4500 == 0:
