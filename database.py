@@ -4,6 +4,7 @@ import time
 import pyodbc
 import pandas as pd
 import warnings
+from datetime import date
 from dotenv import load_dotenv
 
 from utils import saveData
@@ -26,6 +27,7 @@ else:
 #)
 
 # Connection to local server
+formatted_date = date.today().strftime('%Y-%m-%d')
 conn = pyodbc.connect(f"Driver={os.getenv('DB_DRIVER_WIN')};Server={os.getenv('DB_SERVER')};Database={os.getenv('DB_DATABASE')};Trusted_Connection=yes;")
 
 """
@@ -33,13 +35,21 @@ Returns vehicle data from the current day
 """
 def fetchToday():
     data = pd.DataFrame()
-    sql = "select v.VehicleID, v.Class, v.IntersectionOrigin, v.IntersectionExit, v.Timestamp from Vehicles as v where cast(Timestamp as Date) = cast(datetime.today().strftime('%d-%m-%Y') as Date)"
+
+    #sql = f"""
+    #    SELECT v.VehicleID, v.Class, v.IntersectionOrigin, v.IntersectionExit, v.Timestamp
+    #    FROM Vehicles AS v
+    #    WHERE CAST(Timestamp AS Date) = '{formatted_date}'
+    #"""
+    sql = f"""
+            SELECT v.VehicleID, v.Class, v.IntersectionOrigin, v.IntersectionExit, v.Timestamp 
+            FROM Vehicles AS v """
     try:
         data = pd.read_sql(sql, conn)
-    except:
-        print('Failed to fetch data from database!')
+    except Exception as e:
+        print(f'Failed to fetch data from database! {e}')
 
-    return data
+    return data.to_dict(orient='records')
 
 """
 Returns last vehicle ID in the database
@@ -61,12 +71,13 @@ are saved locally.
 def insert(data, points):
     try:
         t1 = time.time()
-        cursor = conn.cursor()    
+        cursor = conn.cursor()
         cursor.fast_executemany = True
 
         #Find last VehicleID in db
         lastID = getLastID()
-        data = data.loc[(data['VehicleID'] > lastID)]    
+        data = pd.DataFrame(data)
+        data = data.loc[(data['VehicleID'] > lastID)]
 
         # Insert Dataframe into SQL Server:
         for index, v in data.iterrows():
@@ -88,7 +99,7 @@ Returns vehicle data or posision points from specified time period
 def download(dateFrom, dateTo, value):
     data = pd.DataFrame()
     sqlVehicles = "select v.VehicleID, v.Class, v.IntersectionOrigin, v.IntersectionExit, v.Timestamp from Vehicles as v where cast(v.Timestamp as Date) between cast('{0}' as Date) and cast('{1}' as Date)".format(dateFrom, dateTo)
-    
+
     try:
         data = pd.read_sql(sqlVehicles, conn)
         data = data.set_index(pd.Index(['VehicleID']))
@@ -98,12 +109,12 @@ def download(dateFrom, dateTo, value):
     if value == 'Vehicles':
         return data
 
-    if value == 'Points':       
+    if value == 'Points':
         sqlPoints = "select p.X_point, p.Y_point, p.VehicleID from PositionPoints as p where p.VehicleID between {0} and {1}".format(data['VehicleID'].min(), data['VehicleID'].max())
         try:
             data = pd.read_sql(sqlPoints, conn)
             data = data.set_index(pd.Index(['VehicleID']))
         except:
             print('Failed to fetch data from database!')
-    
+
         return data
